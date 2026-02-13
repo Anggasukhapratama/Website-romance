@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pertanyaan Penting 💞</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    /* Arena tombol */
+    #btnArena{
+      position: relative;
+      width: min(520px, 92vw);
+      height: 170px;
+      margin: 18px auto 0;
+      border-radius: 18px;
+      background: rgba(255, 105, 180, 0.08);
+      border: 1px dashed rgba(255, 0, 90, 0.25);
+      overflow: hidden;
+    }
+
+    /* YES selalu center */
+    #yesBtn{
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+
+    /* NO akan diposisikan pakai JS (awal: samping YES) */
+    #noBtn{
+      position: absolute;
+      z-index: 20;
+    }
+
+    /* Overlay music gate harus FIX CENTER */
+    .audioGate{
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 220, 235, .55);
+      backdrop-filter: blur(10px);
+      z-index: 9999;
+      padding: 16px;
+    }
+    .audioGate.hidden{ display:none !important; }
+
+    .audioGateCard{
+      width: min(420px, 92vw);
+      background: #fff;
+      border: 1px solid rgba(255,77,136,.25);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 18px 60px rgba(255,0,90,.18);
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="wrap">
+    <section class="card center">
+      <div class="title">
+        <div class="pill">Kado kecil dulu 🎁</div>
+        <h1>Apakah kamu sayang aku?</h1>
+        <p class="muted">Jawab jujur ya… hehe.</p>
+      </div>
+
+      <div id="btnArena">
+        <button id="yesBtn" class="btn" type="button">Yes 💖</button>
+        <button id="noBtn" class="btn ghost" type="button">No 🙃</button>
+      </div>
+
+      <div id="unlock" class="unlock hidden">
+        <div class="lockLine">
+          <div class="spark"></div>
+          <div class="spark"></div>
+          <div class="spark"></div>
+        </div>
+
+        <p class="muted" style="margin-top:10px">Membuka kode kenangan…</p>
+
+        <div class="progress">
+          <div id="bar" class="bar"></div>
+        </div>
+
+        <p id="codeText" class="code hidden">KODE: <b id="codeValue"></b></p>
+
+        <button id="openBook" class="btn hidden" type="button" style="margin-top:12px">
+          Buka Kenangan 📖
+        </button>
+      </div>
+
+      <p class="muted small" style="margin-top:16px;">
+        (Kalau musik belum bunyi, tap layar sekali ya 💗)
+      </p>
+    </section>
+  </main>
+
+  <!-- Gate autoplay -->
+  <div id="audioGate" class="audioGate hidden">
+    <div class="audioGateCard">
+      <div class="pill">🎵 Musik</div>
+      <h2 style="margin:10px 0 6px;">Tap untuk mulai musik</h2>
+      <p class="muted">Browser kadang blokir autoplay. Tap sekali ya 💖</p>
+      <button id="startMusic" class="btn" type="button">Mulai Musik</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script src="surprise.js"></script>
+</body>
+</html>

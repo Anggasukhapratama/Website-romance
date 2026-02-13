@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Untuk Kamu 💛</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <div class="title">
+        <div class="pill">Kenangan Kita</div>
+        <h1>Masukkan sandi dulu ya 🤍</h1>
+        <p class="muted">Hanya kamu yang tahu sandinya.</p>
+      </div>
+
+      <form id="loginForm" class="form">
+        <label class="label">Sandi</label>
+        <input id="pw" class="input" type="password" placeholder="••••••••" autocomplete="current-password" required />
+        <button class="btn" type="submit">Masuk</button>
+        <p id="loginErr" class="err hidden">Sandi salah 🙈</p>
+      </form>
+
+      <div class="foot">
+        <a class="link" href="admin.html">Admin</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    ensureSeed();
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pw = document.getElementById('pw').value;
+      const ok = await verifyPassword(pw);
+      const err = document.getElementById('loginErr');
+      if (!ok) {
+        err.classList.remove('hidden');
+        shake(document.querySelector('.card'));
+        return;
+      }
+      err.classList.add('hidden');
+      sessionStorage.setItem('KK_AUTH', '1');
+      window.location.href = 'surprise.html';
+    });
+  </script>
+</body>
+</html>

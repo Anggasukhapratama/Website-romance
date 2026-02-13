@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Kenangan</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <div class="title">
+        <div class="pill">Admin</div>
+        <h1>Kelola Kenangan</h1>
+        <p class="muted">Atur sandi, jumlah halaman, foto & kata-kata.</p>
+      </div>
+
+      <div class="grid2">
+        <!-- PANEL SANDI -->
+        <div class="panel">
+          <h3 class="h3">Sandi Login</h3>
+
+          <label class="label">Sandi baru</label>
+          <input id="newPw" class="input" type="password" placeholder="contoh: sayangkamu" />
+
+          <div class="row" style="margin-top:10px;">
+            <button id="savePw" class="btn" type="button">Simpan Sandi</button>
+          </div>
+
+          <!-- tampilkan sandi saat ini -->
+          <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+            <button id="togglePw" class="btn ghost" type="button">👀 Tampilkan sandi</button>
+            <button id="copyPw" class="btn ghost" type="button">📋 Copy</button>
+            <span id="currentPw" class="muted" style="font-weight:700;"></span>
+          </div>
+
+          <p class="muted small" style="margin-top:10px;">
+            Catatan: disimpan di browser kamu (localStorage). Ini cukup untuk surprise, tapi bukan keamanan serius.
+          </p>
+        </div>
+
+        <!-- PANEL PENGATURAN BUKU -->
+        <div class="panel">
+          <h3 class="h3">Pengaturan Buku</h3>
+
+          <label class="label">Jumlah slide (halaman)</label>
+          <input id="slideCount" class="input" type="number" min="1" max="99" />
+
+          <label class="label" style="margin-top:10px;">Kode romantis (opsional)</label>
+          <input id="revealCode" class="input" type="text" placeholder="contoh: 14-02-2026" />
+
+          <div class="row" style="margin-top:10px;">
+            <button id="applyCount" class="btn" type="button">Terapkan</button>
+          </div>
+
+          <p class="muted small">Jumlah slide akan menambah/memotong daftar halaman.</p>
+        </div>
+      </div>
+
+      <hr class="sep"/>
+
+      <!-- DAFTAR SLIDE -->
+      <div class="panel">
+        <h3 class="h3">Daftar Slide</h3>
+        <div id="slidesList" class="slidesList"></div>
+      </div>
+
+      <!-- PREVIEW -->
+      <div class="panel">
+        <h3 class="h3">Preview</h3>
+        <div class="preview">
+          <img id="pvImg" alt="preview" />
+          <div>
+            <div id="pvTitle" class="capTitle">—</div>
+            <div id="pvText" class="capText">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot">
+        <a class="link" href="index.html">Kembali ke Login</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    ensureSeed();
+
+    // ========= SANDI VIEW =========
+    let pwShown = false;
+
+    function refreshPwView(show) {
+      const data = loadData();
+      const el = document.getElementById('currentPw');
+      if (!data) { el.textContent = ''; return; }
+
+      const plain = data.passwordPlain || '';
+      if (!plain) {
+        el.textContent = '(belum ada sandi)';
+        return;
+      }
+
+      el.textContent = show
+        ? `Sandi: ${plain}`
+        : `Sandi: ${'•'.repeat(Math.min(plain.length, 10))}`;
+
+      document.getElementById('togglePw').textContent =
+        show ? '🙈 Sembunyikan sandi' : '👀 Tampilkan sandi';
+    }
+
+    document.getElementById('togglePw').onclick = () => {
+      pwShown = !pwShown;
+      refreshPwView(pwShown);
+    };
+
+    document.getElementById('copyPw').onclick = async () => {
+      const data = loadData();
+      const plain = data?.passwordPlain || '';
+      if (!plain) return toast('Belum ada sandi.');
+      try {
+        await navigator.clipboard.writeText(plain);
+        toast('Sandi dicopy ✅');
+      } catch {
+        toast('Gagal copy (izin browser).');
+      }
+    };
+
+    // Simpan sandi (FIX)
+    document.getElementById('savePw').onclick = async () => {
+      ensureSeed();
+      const pw = document.getElementById('newPw').value.trim();
+      if (pw.length < 3) return toast('Sandi minimal 3 karakter ya.');
+
+      const hash = await sha256(pw);
+      const data = loadData();
+
+      saveData({ ...data, passwordHash: hash, passwordPlain: pw });
+
+      document.getElementById('newPw').value = '';
+      toast('Sandi berhasil disimpan 🔐');
+      refreshPwView(false);
+    };
+
+    // ========= SLIDES =========
+    function renderList() {
+      const data = loadData();
+      const wrap = document.getElementById('slidesList');
+      wrap.innerHTML = '';
+
+      data.slides.forEach((s, i) => {
+        const item = document.createElement('div');
+        item.className = 'slideItem';
+
+        item.innerHTML = `
+          <div class="slideHead">
+            <div class="slideIdx">#${i+1}</div>
+            <div class="slideBtns">
+              <button class="mini" data-act="up">↑</button>
+              <button class="mini" data-act="down">↓</button>
+              <button class="mini danger" data-act="clear">Clear</button>
+            </div>
+          </div>
+
+          <label class="label">Judul</label>
+          <input class="input" data-k="title" value="${escapeHtml(s.title||'')}" placeholder="Contoh: Hari Pertama Kita" />
+
+          <label class="label">Kata-kata</label>
+          <textarea class="input ta" data-k="text" placeholder="Tulis kalimat romantis...">${escapeHtml(s.text||'')}</textarea>
+
+          <label class="label">Foto</label>
+          <input class="input" type="file" accept="image/*" data-k="photoFile" />
+
+          <div class="row">
+            <button class="btn ghost" data-act="preview" type="button">Preview</button>
+            <button class="btn" data-act="save" type="button">Simpan Slide</button>
+          </div>
+        `;
+
+        item.addEventListener('click', async (e) => {
+          const btn = e.target.closest('button');
+          if (!btn) return;
+
+          const act = btn.dataset.act;
+          let data2 = loadData();
+
+          if (act === 'up' && i > 0) {
+            [data2.slides[i-1], data2.slides[i]] = [data2.slides[i], data2.slides[i-1]];
+            saveData(data2); renderList(); return;
+          }
+          if (act === 'down' && i < data2.slides.length-1) {
+            [data2.slides[i+1], data2.slides[i]] = [data2.slides[i], data2.slides[i+1]];
+            saveData(data2); renderList(); return;
+          }
+          if (act === 'clear') {
+            data2.slides[i] = { title:'', text:'', photo:'' };
+            saveData(data2); renderList(); toast('Slide dikosongkan'); return;
+          }
+
+          if (act === 'preview') {
+            const title = item.querySelector('[data-k="title"]').value;
+            const text  = item.querySelector('[data-k="text"]').value;
+            document.getElementById('pvTitle').textContent = title || `Halaman ${i+1}`;
+            document.getElementById('pvText').textContent  = text || '';
+            document.getElementById('pvImg').src = data2.slides[i].photo || '';
+            return;
+          }
+
+          if (act === 'save') {
+            const title = item.querySelector('[data-k="title"]').value;
+            const text  = item.querySelector('[data-k="text"]').value;
+            const fileInput = item.querySelector('[data-k="photoFile"]');
+            let photo = data2.slides[i].photo || '';
+
+            if (fileInput.files && fileInput.files[0]) {
+              photo = await fileToDataUrl(fileInput.files[0]);
+            }
+
+            data2.slides[i] = { title, text, photo };
+            saveData(data2);
+
+            toast(`Slide #${i+1} tersimpan ✅`);
+
+            // update preview
+            document.getElementById('pvTitle').textContent = title || `Halaman ${i+1}`;
+            document.getElementById('pvText').textContent  = text || '';
+            document.getElementById('pvImg').src = photo || '';
+            return;
+          }
+        });
+
+        wrap.appendChild(item);
+      });
+
+      document.getElementById('slideCount').value = data.slides.length;
+      document.getElementById('revealCode').value = data.revealCode || '';
+    }
+
+    document.getElementById('applyCount').onclick = () => {
+      const n = parseInt(document.getElementById('slideCount').value || '1', 10);
+      const code = document.getElementById('revealCode').value.trim();
+      const data = loadData();
+
+      const slides = (data.slides || []).slice(0, n);
+      while (slides.length < n) slides.push({ title:'', text:'', photo:'' });
+
+      saveData({ ...data, slides, revealCode: code });
+
+      toast('Pengaturan diterapkan ✅');
+      renderList();
+    };
+
+    // init
+    refreshPwView(false);
+    renderList();
+  </script>
+</body>
+</html>
