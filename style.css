@@ -187,9 +187,53 @@ body{
   color:var(--accent1);
 }
 
+
 .iconBtn:hover{
   background:var(--accent1);
   color:white;
+}
+
+.topActions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:12px;
+  flex-wrap:wrap; /* ini kunci biar ga numpuk */
+}
+
+.navPager{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.pageInfo{
+  min-width:48px;
+  text-align:center;
+  font-weight:700;
+  color:var(--accent2);
+}
+
+/* tombol game */
+.navBtn{
+  padding:10px 14px;
+  border-radius:14px;
+  background:linear-gradient(135deg,var(--accent1),var(--accent2));
+  color:white;
+  font-weight:800;
+  text-decoration:none;
+  box-shadow:0 8px 20px rgba(255,0,90,.25);
+  transition:.25s;
+  white-space:nowrap;
+}
+.navBtn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 12px 28px rgba(255,0,90,.35);
+}
+
+@media(max-width:520px){
+  .topbar{ flex-direction:column; align-items:flex-start; gap:10px; }
+  .topActions{ width:100%; justify-content:space-between; }
 }
 
 /* Animasi tombol NO */
