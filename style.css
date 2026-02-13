@@ -253,6 +253,111 @@ body{
   border-radius:12px;
 }
 
+/* =========================
+   MOBILE FIXES (ADD AT END)
+   ========================= */
+
+/* 1) Biar semua tombol/link enak dipencet di mobile */
+.btn, .navBtn, .iconBtn, .mini {
+  min-height: 44px;           /* touch target iOS/Android */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 2) Jangan paksa semua .btn jadi 100% lebar untuk halaman yang pakai absolute button (surprise) */
+@media (max-width: 480px){
+  .card { padding: 18px; }
+  .title h1 { font-size: 26px; }
+  .photoWrap img { height: 260px; }
+
+  /* default tombol full width untuk form/admin/book */
+  .form .btn,
+  .bookFooter .btn,
+  .panel .btn,
+  .row .btn {
+    width: 100%;
+    max-width: none;
+  }
+
+  /* tapi khusus arena Yes/No: jangan full width */
+  #btnArena .btn{
+    width: auto !important;
+    max-width: none !important;
+  }
+
+  /* arena agak fleksibel */
+  #btnArena{ height: 200px; }
+}
+
+/* 3) Topbar rapihin beneran di layar sempit */
+.topbar .brand{ font-weight: 800; }
+
+@media (max-width: 520px){
+  .topbar{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .topActions{
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;  /* turun ke 1 kolom */
+    gap: 10px;
+  }
+
+  .navBtn{
+    width: 100%;
+    text-align: center;
+  }
+
+  .navPager{
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .iconBtn{
+    flex: 0 0 auto;
+    padding: 10px 12px;
+  }
+
+  .pageInfo{
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}
+
+/* 4) Admin: grid2 kalau belum ada stylenya, bikin responsif */
+.grid2{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 760px){
+  .grid2{ grid-template-columns: 1fr; }
+}
+
+/* 5) Admin: baris tombol biar rapi dan nggak mepet */
+.row{
+  display:flex;
+  gap:12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.row .btn{ flex: 1 1 180px; }
+
+/* 6) Textarea admin biar enak */
+.ta{ min-height: 110px; resize: vertical; }
+
+/* 7) Book footer tombol rapi */
+.bookFooter{
+  margin-top: 14px;
+  display:flex;
+  gap:12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.bookFooter .btn{ flex: 1 1 220px; }
+
 /* Responsive */
 @media(max-width:600px){
   .photoWrap img{height:260px;}
