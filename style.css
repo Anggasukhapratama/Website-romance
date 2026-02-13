@@ -326,6 +326,26 @@ body{
   }
 }
 
+/* FIX: pink arena jangan keluar dari card (surprise) */
+.card{
+  overflow: hidden; /* clip semua efek/elemen di dalam card */
+}
+
+/* arena full ikut card, bukan min(520px,92vw) */
+#btnArena{
+  width: 100%;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+/* jaga-jaga: kalau ada transform/anim yang bikin overflow */
+#btnArena, #btnArena *{
+  max-width: 100%;
+}
+
+
 /* 4) Admin: grid2 kalau belum ada stylenya, bikin responsif */
 .grid2{
   display: grid;
