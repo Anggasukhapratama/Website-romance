@@ -6,7 +6,7 @@
 const STORE_KEY = "KK_MEMORIES_V3";
 
 // ✅ GANTI PASSWORD DI SINI (sama untuk semua device)
-const SHARED_PASSWORD = "sayangkamu2026";
+const SHARED_PASSWORD = "sayangku";
 
 // (opsional) kalau mau "hint" buat kamu sendiri, tidak dipakai sistem
 const PASSWORD_HINT = "kata sayang + tahun";
