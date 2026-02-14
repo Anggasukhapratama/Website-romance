@@ -5,33 +5,33 @@ const STORE_KEY = "KK_MEMORIES_V3";
 const SHARED_PASSWORD = "sayangku";
 
 // ✅ isi kode romantis (dipakai surprise)
-const REVEAL_CODE = "KITA-SELAMANYA";
+const REVEAL_CODE = "LOPE YOU ASYA";
 
 // ✅ isi 5 slide manual di sini (edit sesukamu)
 const MANUAL_SLIDES = [
   {
     title: "Halaman 1",
-    text: "Ini awal cerita kita. Makasih ya udah hadir 🤍",
+    text: "Ini adalah kesayanganku, orang yang selalu berhasil bikin hari-hariku terasa lebih hidup. Entah kenapa, setiap kali aku ngobrol sama kamu, dunia terasa lebih tenang dan hangat. Kamu itu bukan cuma seseorang yang aku sayang, tapi juga rumah buat hati aku pulang. Aku bersyukur banget bisa punya kamu, karena kamu adalah alasan aku tersenyum tanpa sadar setiap hari.",
     photo: "img/1.jpg", // atau "" kalau tidak pakai foto
   },
   {
     title: "Halaman 2",
-    text: "Aku suka caramu bikin hari-hariku jadi hangat 💗",
+    text: "Kamu tahu nggak? Kamu itu kesayanganku yang paling aku jaga. Aku nggak pernah nyangka bisa nemuin seseorang yang bikin aku merasa cukup hanya dengan kehadirannya. Kamu nggak harus melakukan hal besar, cukup ada di samping aku saja sudah bikin semuanya terasa lebih baik. Aku sayang kamu bukan cuma karena siapa kamu, tapi karena kamu selalu membuat aku merasa dicintai dengan cara paling sederhana.",
     photo: "img/2.jpg",
   },
   {
     title: "Halaman 3",
-    text: "Kalau capek, sandar ya… aku ada di sini 🤍",
+    text: "Ini kesayanganku, orang yang selalu aku pikirin bahkan di tengah kesibukan sekalipun. Kamu itu seperti bagian kecil dari kebahagiaan yang selalu aku bawa ke mana pun aku pergi. Kadang aku cuma senyum sendiri karena inget kamu, karena rasanya hati ini selalu penuh kalau ada kamu. Aku harap kamu tahu, aku benar-benar tulus mencintai kamu, lebih dari yang bisa aku jelaskan dengan kata-kata.",
     photo: "img/3.jpg",
   },
   {
     title: "Halaman 4",
-    text: "Kita pelan-pelan, tapi bareng-bareng ya 🌷",
+    text: "Kamu adalah kesayanganku, tempat ternyaman yang pernah aku temui. Aku suka cara kamu hadir dalam hidup aku, bukan dengan paksaan, tapi dengan ketulusan. Kamu itu seperti peluk yang nggak terlihat, tapi selalu bisa menenangkan. Aku ingin terus ada buat kamu, menemani kamu dalam setiap langkah, karena aku merasa hidupku lebih berarti sejak ada kamu.",
     photo: "img/4.jpg",
   },
   {
     title: "Halaman 5",
-    text: "Untuk semua hari yang sudah dan akan kita lewati… aku sayang kamu 💞",
+    text: "Ini adalah kesayanganku, orang yang aku pilih setiap hari tanpa ragu. Aku nggak peduli seberapa rumit dunia ini, selama aku punya kamu, semuanya terasa lebih ringan. Kamu adalah cerita favorit aku, kebahagiaan paling sederhana, dan cinta yang aku syukuri. Aku cuma ingin kamu tahu, aku bangga punya kamu, dan aku ingin terus mencintai kamu dengan cara yang paling tulus.",
     photo: "img/5.jpg",
   },
 ];
