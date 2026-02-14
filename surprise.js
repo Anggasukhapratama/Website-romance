@@ -118,7 +118,7 @@ yesBtn.addEventListener("click", () => {
   openBook.classList.add("hidden");
 
   const data = loadData();
-  const code = (data?.revealCode && data.revealCode.trim()) ? data.revealCode.trim() : makeCuteCode();
+  const code = (getRevealCode() || "").trim() || makeCuteCode();
   codeValue.textContent = code;
 
   let p = 0;

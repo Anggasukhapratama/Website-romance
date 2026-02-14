@@ -43,57 +43,49 @@
     </section>
   </main>
 
-  <script src="app.js"></script>
-  <script>
-    
-    ensureSeed();
-    guardAuthOrGoHome();
+ <script src="app.js"></script>
+<script>
+  ensureSeed();
+  guardAuthOrGoHome();
 
-    const data = loadData();
-    const slides = data.slides || [];
-    let idx = Math.min(data.lastIndex || 0, Math.max(0, slides.length-1));
+  const slides = getSlides();
+  const d = loadData();
+  let idx = Math.min(d.lastIndex || 0, Math.max(0, slides.length - 1));
 
-    const elPhoto = document.getElementById('photo');
-    const elTitle = document.getElementById('title');
-    const elText  = document.getElementById('text');
-    const pageInfo= document.getElementById('pageInfo');
+  const elPhoto = document.getElementById('photo');
+  const elTitle = document.getElementById('title');
+  const elText  = document.getElementById('text');
+  const pageInfo= document.getElementById('pageInfo');
 
-    function render() {
-      if (!slides.length) {
-        elPhoto.src = '';
-        elTitle.textContent = 'Belum ada slide 😅';
-        elText.textContent = 'Buka Admin untuk menambahkan foto & kata-kata.';
-        pageInfo.textContent = '0/0';
-        return;
-      }
-      const s = slides[idx];
-      elPhoto.src = s.photo || '';
-      elTitle.textContent = s.title || `Halaman ${idx+1}`;
-      elText.textContent  = s.text || '';
-      pageInfo.textContent = `${idx+1}/${slides.length}`;
-      saveData({...data, lastIndex: idx});
-    }
+  function render() {
+    const s = slides[idx];
+    elPhoto.src = s.photo || '';
+    elTitle.textContent = s.title || `Halaman ${idx+1}`;
+    elText.textContent  = s.text || '';
+    pageInfo.textContent = `${idx+1}/${slides.length}`;
+    saveData({ lastIndex: idx });
+  }
 
-    document.getElementById('prev').onclick = () => { idx = (idx-1 + slides.length) % slides.length; render(); };
-    document.getElementById('next').onclick = () => { idx = (idx+1) % slides.length; render(); };
-    document.getElementById('home').onclick = () => { window.location.href = 'surprise.html'; };
+  document.getElementById('prev').onclick = () => { idx = (idx-1 + slides.length) % slides.length; render(); };
+  document.getElementById('next').onclick = () => { idx = (idx+1) % slides.length; render(); };
+  document.getElementById('home').onclick = () => { window.location.href = 'surprise.html'; };
 
+  // Swipe mobile (tetap)
+  let startX = null;
+  document.addEventListener('touchstart', (e)=> startX = e.touches[0].clientX, {passive:true});
+  document.addEventListener('touchend', (e)=>{
+    if (startX == null) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    startX = null;
+    if (Math.abs(dx) < 40) return;
+    if (dx < 0) document.getElementById('next').click();
+    else document.getElementById('prev').click();
+  }, {passive:true});
 
-    // Swipe mobile
-    let startX = null;
-    document.addEventListener('touchstart', (e)=> startX = e.touches[0].clientX, {passive:true});
-    document.addEventListener('touchend', (e)=>{
-      if (startX == null) return;
-      const dx = e.changedTouches[0].clientX - startX;
-      startX = null;
-      if (Math.abs(dx) < 40 || !slides.length) return;
-      if (dx < 0) document.getElementById('next').click();
-      else document.getElementById('prev').click();
-    }, {passive:true});
-    initGlobalMusic();
-    playGlobalMusic();
+  initGlobalMusic();
+  playGlobalMusic();
+  render();
+</script>
 
-    render();
-  </script>
 </body>
 </html>

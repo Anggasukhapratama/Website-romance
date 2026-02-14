@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>✨ Cinta Capture · game wajah & tangan ✨</title>
+  <title>✨ Cinta Capture · 1 atau 2 pemain ✨</title>
 
   <!-- Google Font untuk sentuhan lebih manis -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,7 +31,7 @@
       height: 100%;
       overflow: hidden;
       font-family: var(--font-main);
-      background: #110005;  /* fallback */
+      background: #110005;
     }
 
     #stage {
@@ -40,13 +40,12 @@
       background: #110005;
     }
 
-    /* video dan canvas — kamera fullscreen */
     video {
       position: absolute;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transform: scaleX(-1);  /* mirror biar natural */
+      transform: scaleX(-1);
       z-index: 1;
       pointer-events: none;
       filter: brightness(1.02) contrast(1.02) saturate(1.1);
@@ -58,7 +57,7 @@
       width: 100%;
       height: 100%;
       z-index: 2;
-      pointer-events: none;  /* biar HUD tetap bisa diklik */
+      pointer-events: none;
       display: block;
     }
 
@@ -135,7 +134,6 @@
       border-color: white;
     }
 
-    /* banner bawah */
     .hudBottom {
       position: absolute;
       left: 50%;
@@ -169,7 +167,7 @@
       color: #ffe2ec;
     }
 
-    /* overlay start (romantic) */
+    /* overlay start */
     .overlay {
       position: absolute;
       inset: 0;
@@ -183,7 +181,7 @@
     }
 
     .card {
-      max-width: 460px;
+      max-width: 500px;
       width: 100%;
       background: rgba(255, 240, 245, 0.2);
       backdrop-filter: blur(20px);
@@ -219,6 +217,7 @@
       justify-content: center;
       align-items: center;
       flex-wrap: wrap;
+      margin: 15px 0;
     }
 
     .input {
@@ -258,7 +257,32 @@
       background: linear-gradient(145deg, #ff799f, #ff4d7a);
     }
 
-    /* landscape gate */
+    /* mode selector */
+    .mode-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin: 20px 0 10px;
+    }
+
+    .mode-btn {
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.3);
+      padding: 12px 25px;
+      border-radius: 50px;
+      font-weight: 900;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
+      font-size: 1.1rem;
+    }
+
+    .mode-btn.active {
+      background: #ff3b6f;
+      border-color: white;
+      box-shadow: 0 0 20px #ff3b6f;
+    }
+
     .landscapeGate {
       position: absolute;
       inset: 0;
@@ -305,7 +329,6 @@
 
     .toast.show { display: block; }
 
-    /* minor touch */
     #hint {
       background: rgba(255, 230, 240, 0.2);
       border-radius: 60px;
@@ -318,7 +341,7 @@
     <video id="video" playsinline></video>
     <canvas id="c"></canvas>
 
-    <!-- HUD atas super gemay -->
+    <!-- HUD atas -->
     <div class="hudTop">
       <div class="hudGroup">
         <span class="chip">🎮✨ Love catcher</span>
@@ -334,26 +357,33 @@
 
     <div class="hudBottom">
       <div class="banner" id="banner">
-        💗 <strong>tangkap bola sesuai warna tanganmu</strong> — kiri (putih) punya P1, kanan (pink) punya P2
-        <small>⚠️ salah tangkap? skor berkurang 😱  tapi santuy, ini cinta 💋</small>
+        💗 <strong>tangan kiri kamu = P1 (putih) • tangan kanan kamu = P2 (pink)</strong>
+        <small>⚠️ salah tangkap? skor berkurang 😱 main 1 tangan juga bisa!</small>
       </div>
     </div>
 
-    <!-- overlay start -->
+    <!-- overlay start dengan pilihan mode -->
     <div id="overlay" class="overlay">
       <div class="card">
         <div class="title">🌸 main yuk! 🌸</div>
         <p class="sub">
-          tunggu sampai <b>2 wajah terdeteksi</b> (kiri/p1, kanan/p2) <br>
-          lalu tangkap bola pakai ujung jari telunjuk ✨
+          pilih mau main pakai 1 tangan atau 2 tangan?
         </p>
+        
+        <div class="mode-group">
+          <div id="mode1Btn" class="mode-btn active">🤚 1 tangan</div>
+          <div id="mode2Btn" class="mode-btn">🖐️ 2 tangan</div>
+        </div>
+        
         <div class="row">
           <label style="font-weight:900;">🏆 target poin</label>
           <input id="target" class="input" type="number" min="3" max="200" value="10">
-          <button id="start" class="bigBtn">mulai ❤️</button>
         </div>
-        <p class="sub" id="hint" style="margin-top:12px;">
-          🌈 pastikan cahaya cukup & posisi landscape biar makin seru
+        
+        <button id="start" class="bigBtn" style="margin-top:15px;">mulai ❤️</button>
+        
+        <p class="sub" id="hint" style="margin-top:20px;">
+          🌈 pastikan cahaya cukup & posisi landscape
         </p>
       </div>
     </div>
@@ -391,6 +421,8 @@
       const s1El = $('s1'), s2El = $('s2'), tLabel = $('tLabel');
       const targetInput = $('target');
       const hint = $('hint');
+      const mode1Btn = $('mode1Btn');
+      const mode2Btn = $('mode2Btn');
 
       // helper functions
       const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
@@ -401,7 +433,7 @@
         setTimeout(() => toastEl.classList.remove('show'), 900);
       };
 
-      // resize canvas sesuai layar
+      // resize canvas
       const resizeCanvas = () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -412,16 +444,19 @@
       // landscape detector
       const isLandscape = () => window.innerWidth > window.innerHeight;
 
-      // state game
+      // game state
       let running = false;
       let score1 = 0, score2 = 0;
       let target = 10;
+      let gameMode = 1; // 1 = 1 tangan (hanya 1 tangan jadi P1 & P2 bergantian?), tapi kita buat: 1 tangan = 1 pemain (P1 saja), 2 tangan = 2 pemain
+      // Penjelasan: mode 1 tangan = hanya 1 pemain (P1) menggunakan 1 tangan (bebas kiri/kanan)
+      // mode 2 tangan = 2 pemain: tangan kiri = P1, tangan kanan = P2
 
       // detected objects
       const faceL = { x:0, y:0, seen: false };
       const faceR = { x:0, y:0, seen: false };
-      const hand1 = { x:0, y:0, seen: false }; // putih
-      const hand2 = { x:0, y:0, seen: false }; // pink
+      const hand1 = { x:0, y:0, seen: false }; // tangan pertama (urutan dari mediapipe)
+      const hand2 = { x:0, y:0, seen: false }; // tangan kedua
 
       // bola
       let balls = [];
@@ -451,14 +486,29 @@
         s2El.textContent = '0';
         seedBalls();
         overlay.style.display = 'flex';
-        hint.innerHTML = '🌈 pastikan cahaya cukup & posisi landscape biar makin seru';
+        hint.innerHTML = '🌈 pilih mode, lalu start & tunjukkan wajah';
       }
 
-      // mulai running (sembunyikan overlay)
+      // mulai running
       function beginRunning() {
         running = true;
         overlay.style.display = 'none';
       }
+
+      // mode toggle
+      mode1Btn.addEventListener('click', () => {
+        gameMode = 1;
+        mode1Btn.classList.add('active');
+        mode2Btn.classList.remove('active');
+        hint.innerHTML = 'mode 1 tangan: kamu jadi P1 (putih), tangkap bola putih aja';
+      });
+      
+      mode2Btn.addEventListener('click', () => {
+        gameMode = 2;
+        mode2Btn.classList.add('active');
+        mode1Btn.classList.remove('active');
+        hint.innerHTML = 'mode 2 tangan: kiri = P1 (putih), kanan = P2 (pink)';
+      });
 
       // mediapipe face detection
       const faceDetect = new FaceDetection({
@@ -482,9 +532,13 @@
         if (centers[0]) { faceL.x = centers[0].x; faceL.y = centers[0].y; faceL.seen = true; }
         if (centers[1]) { faceR.x = centers[1].x; faceR.y = centers[1].y; faceR.seen = true; }
 
-        // auto start kalau dua wajah terdeteksi
-        if (!running && faceL.seen && faceR.seen) {
-          beginRunning();
+        // auto start kalau minimal 1 wajah terdeteksi (untuk mode 1 tangan)
+        if (!running) {
+          if (gameMode === 1 && (faceL.seen || faceR.seen)) {
+            beginRunning();
+          } else if (gameMode === 2 && faceL.seen && faceR.seen) {
+            beginRunning();
+          }
         }
       });
 
@@ -498,20 +552,43 @@
         minDetectionConfidence: 0.6,
         minTrackingConfidence: 0.6
       });
+      
       hands.onResults(results => {
         hand1.seen = false;
         hand2.seen = false;
+        
         const landmarks = results.multiHandLandmarks || [];
+        const handedness = results.multiHandedness || [];
+        
         if (landmarks.length === 0) return;
 
-        // ambil ujung jari telunjuk (index 8)
-        const pts = landmarks.slice(0,2).map(lm => ({
-          x: lm[8].x * canvas.width,
-          y: lm[8].y * canvas.height
-        }));
+        // kita urutkan berdasarkan label (kiri/kanan) biar konsisten
+        const handData = [];
+        for (let i = 0; i < landmarks.length; i++) {
+          const label = handedness[i]?.label || 'Left'; // default Left
+          const pos = {
+            x: landmarks[i][8].x * canvas.width,
+            y: landmarks[i][8].y * canvas.height
+          };
+          handData.push({ ...pos, label });
+        }
 
-        if (pts[0]) { hand1.x = pts[0].x; hand1.y = pts[0].y; hand1.seen = true; }
-        if (pts[1]) { hand2.x = pts[1].x; hand2.y = pts[1].y; hand2.seen = true; }
+        // urutkan: Left dulu, baru Right
+        handData.sort((a, b) => (a.label === 'Left' ? -1 : 1));
+
+        if (handData.length > 0) {
+          hand1.x = handData[0].x;
+          hand1.y = handData[0].y;
+          hand1.seen = true;
+          hand1.label = handData[0].label;
+        }
+        
+        if (handData.length > 1) {
+          hand2.x = handData[1].x;
+          hand2.y = handData[1].y;
+          hand2.seen = true;
+          hand2.label = handData[1].label;
+        }
       });
 
       // kamera
@@ -528,9 +605,17 @@
         await camera.start();
       }
 
-      // logika side berdasarkan posisi tangan (kiri layar = P1)
-      function whoFromHand(handX) {
-        return handX < canvas.width / 2 ? 1 : 2;
+      // logika siapa pemain berdasarkan tangan
+      function getPlayerFromHand(hand) {
+        if (!hand.seen) return null;
+        
+        if (gameMode === 1) {
+          // mode 1 tangan: semua tangan jadi P1
+          return 1;
+        } else {
+          // mode 2 tangan: kiri = P1, kanan = P2
+          return hand.label === 'Left' ? 1 : 2;
+        }
       }
 
       function penalize(who) {
@@ -538,7 +623,7 @@
           score1 = Math.max(0, score1 - 1);
           s1El.textContent = score1;
           showToast('❌ P1 salah tangkap!');
-        } else {
+        } else if (who === 2) {
           score2 = Math.max(0, score2 - 1);
           s2El.textContent = score2;
           showToast('❌ P2 salah tangkap!');
@@ -547,16 +632,23 @@
 
       function reward(who) {
         if (who === 1) { score1++; s1El.textContent = score1; }
-        else { score2++; s2El.textContent = score2; }
+        else if (who === 2) { score2++; s2El.textContent = score2; }
       }
 
-      function tryCatch(ball, hand, who) {
+      function tryCatch(ball, hand) {
         if (!hand.seen) return false;
-        const catchDist = ball.r + 30;
+        
+        const player = getPlayerFromHand(hand);
+        if (player === null) return false;
+        
+        const catchDist = ball.r + 35;
         if (dist(ball.x, ball.y, hand.x, hand.y) < catchDist) {
-          if (ball.owner === who) reward(who);
-          else penalize(who);
-          // ganti bola baru (owner tetap sesuai awal biar adil)
+          if (ball.owner === player) {
+            reward(player);
+          } else {
+            penalize(player);
+          }
+          // ganti bola baru
           const newBall = spawnBall(ball.owner);
           ball.x = newBall.x; ball.y = newBall.y;
           ball.vx = newBall.vx; ball.vy = newBall.vy;
@@ -570,9 +662,6 @@
       function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // karena video di belakang (z-index lebih rendah), kita hanya gambar overlay deteksi
-        // canvas transparan agar video terlihat
-
         // gambar garis tengah
         ctx.save();
         ctx.strokeStyle = '#ffb0c3';
@@ -584,7 +673,7 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // gambar lingkaran wajah (mirror effect)
+        // gambar lingkaran wajah
         if (faceL.seen) {
           ctx.beginPath();
           ctx.arc(faceL.x, faceL.y, 45, 0, 2*Math.PI);
@@ -608,7 +697,7 @@
           ctx.shadowBlur = 0;
         }
 
-        // gambar tangan (glowing)
+        // gambar tangan
         const drawHand = (h, color) => {
           if (!h.seen) return;
           ctx.shadowColor = color;
@@ -626,8 +715,20 @@
           ctx.fill();
           ctx.globalAlpha = 1.0;
         };
-        drawHand(hand1, '#ffffff');
-        drawHand(hand2, '#ff9cbc');
+
+        // Tentukan warna berdasarkan mode
+        if (gameMode === 1) {
+          // mode 1 tangan: semua tangan putih (P1)
+          drawHand(hand1, '#ffffff');
+          drawHand(hand2, '#ffffff');
+        } else {
+          // mode 2 tangan: kiri putih, kanan pink
+          if (hand1.seen && hand1.label === 'Left') drawHand(hand1, '#ffffff');
+          else if (hand1.seen && hand1.label === 'Right') drawHand(hand1, '#ff9cbc');
+          
+          if (hand2.seen && hand2.label === 'Left') drawHand(hand2, '#ffffff');
+          else if (hand2.seen && hand2.label === 'Right') drawHand(hand2, '#ff9cbc');
+        }
 
         // update & gambar bola
         if (running) {
@@ -640,15 +741,17 @@
             if (b.y > canvas.height - b.r) { b.y = canvas.height - b.r; b.vy *= -1; }
 
             // tangkap dengan kedua tangan
-            if (hand1.seen) tryCatch(b, hand1, whoFromHand(hand1.x));
-            if (hand2.seen) tryCatch(b, hand2, whoFromHand(hand2.x));
+            tryCatch(b, hand1);
+            tryCatch(b, hand2);
           }
 
           // cek menang
-          if (score1 >= target || score2 >= target) {
+          if (score1 >= target || (gameMode === 2 && score2 >= target)) {
             running = false;
             overlay.style.display = 'flex';
-            const winner = score1 >= target ? 'P1' : 'P2';
+            let winner = '';
+            if (gameMode === 1) winner = score1 >= target ? 'P1' : '';
+            else winner = score1 >= target ? 'P1' : 'P2';
             hint.innerHTML = `🎉 <b>${winner} MENANG!</b> klik reset buat main lagi 💕`;
           }
         }
@@ -670,7 +773,6 @@
           ctx.fillStyle = grad;
           ctx.fill();
           ctx.shadowBlur = 0;
-          // stroke border
           ctx.strokeStyle = b.owner === 1 ? '#ffffff' : '#ffd0df';
           ctx.lineWidth = 4;
           ctx.stroke();
@@ -692,27 +794,31 @@
       $('continueAnyway').onclick = () => { allowPortrait = true; landGate.classList.remove('show'); };
 
       // UI events
-      $('exit').onclick = () => location.href = 'about:blank';  // biar aman ganti dummy
+      $('exit').onclick = () => location.href = 'about:blank';
       $('reset').onclick = () => resetGame();
 
       $('start').onclick = async () => {
         target = clamp(parseInt(targetInput.value, 10) || 10, 3, 200);
         tLabel.textContent = target;
 
-        // fullscreen jika bisa
         try { await document.documentElement.requestFullscreen(); } catch(e) {}
 
         allowPortrait = false;
         updateGate();
 
-        resetGame();  // overlay muncul lagi, tapi nanti hilang sendiri saat 2 face
-        hint.innerHTML = '👀 mendeteksi 2 wajah... (kiri P1, kanan P2)';
+        resetGame();
+        
+        if (gameMode === 1) {
+          hint.innerHTML = '👀 mode 1 tangan: tunjukin 1 wajah & 1/2 tangan (jadi P1)';
+        } else {
+          hint.innerHTML = '👀 mode 2 tangan: tunggu 2 wajah, kiri = P1, kanan = P2';
+        }
 
         try {
           seedBalls();
           await startCamera();
         } catch (e) {
-          hint.innerHTML = '❌ kamera error. izinkan kamera dan pakai https (vercel aman)';
+          hint.innerHTML = '❌ kamera error. izinkan kamera dan pakai https';
         }
       };
 
@@ -720,7 +826,6 @@
       tLabel.textContent = targetInput.value;
       seedBalls();
       resetGame();
-
     })();
   </script>
 </body>
