@@ -1,622 +1,727 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <title>Game Cinta 🎮💗</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>✨ Cinta Capture · game wajah & tangan ✨</title>
+
+  <!-- Google Font untuk sentuhan lebih manis -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@600;800;1000&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --p1:#ffffff;
-      --p2:#ff2b67;
-      --hud: rgba(255,255,255,.10);
-      --hud2: rgba(255,255,255,.14);
-      --stroke: rgba(255,255,255,.16);
-      --txt: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.72);
-      --shadow: 0 18px 60px rgba(255,0,90,.22);
-    }
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      background:#000;
-      overflow:hidden;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color: var(--txt);
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    /* Stage */
-    #stage{
-      position:fixed;
-      inset:0;
-      background:#000;
-    }
-    video{ display:none; }
-    canvas{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      display:block;
-      background:#000;
+    :root {
+      --love: #ff3b6f;
+      --love-glow: #ff8aa7;
+      --light: #fff9fb;
+      --glass: rgba(255, 240, 245, 0.2);
+      --glass-border: rgba(255, 255, 255, 0.3);
+      --shadow-pop: 0 20px 40px rgba(255, 20, 100, 0.3);
+      --font-main: 'Quicksand', system-ui, -apple-system, sans-serif;
     }
 
-    /* HUD top */
-    .hudTop{
-      position:absolute;
-      left: calc(env(safe-area-inset-left) + 12px);
-      right: calc(env(safe-area-inset-right) + 12px);
-      top: calc(env(safe-area-inset-top) + 12px);
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      z-index:20;
-      pointer-events:none;
-    }
-    .hudGroup{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      pointer-events:auto;
+    body, html {
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font-main);
+      background: #110005;  /* fallback */
     }
 
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding:10px 12px;
-      border-radius:999px;
-      background: var(--hud);
-      border: 1px solid var(--stroke);
-      backdrop-filter: blur(12px);
-      box-shadow: 0 10px 28px rgba(0,0,0,.25);
-      font-weight:800;
-      white-space:nowrap;
+    #stage {
+      position: fixed;
+      inset: 0;
+      background: #110005;
     }
-    .dot{
-      width:12px;height:12px;border-radius:999px;
-    }
-    .dot.p1{ background:var(--p1); border:2px solid rgba(255,255,255,.6); }
-    .dot.p2{ background:var(--p2); border:2px solid rgba(255,255,255,.75); }
 
-    .btn{
-      padding:10px 14px;
-      border-radius:999px;
-      background: var(--hud2);
-      border:1px solid var(--stroke);
-      color: var(--txt);
-      font-weight:900;
-      cursor:pointer;
-      backdrop-filter: blur(12px);
-      transition:.2s;
-      pointer-events:auto;
+    /* video dan canvas — kamera fullscreen */
+    video {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);  /* mirror biar natural */
+      z-index: 1;
+      pointer-events: none;
+      filter: brightness(1.02) contrast(1.02) saturate(1.1);
     }
-    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.18); }
 
-    /* Bottom helper */
-    .hudBottom{
-      position:absolute;
+    canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;  /* biar HUD tetap bisa diklik */
+      display: block;
+    }
+
+    /* HUD glassmorphism + cantik */
+    .hudTop {
+      position: absolute;
+      left: env(safe-area-inset-left, 12px);
+      right: env(safe-area-inset-right, 12px);
+      top: env(safe-area-inset-top, 16px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .hudGroup {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      pointer-events: auto;
+      backdrop-filter: blur(8px);
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 60px;
+      padding: 6px 10px;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 40px;
+      font-weight: 800;
+      color: white;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 25px -5px rgba(255, 40, 100, 0.4);
+      letter-spacing: 0.3px;
+    }
+
+    .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 20px;
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .dot.p1 { background: #ffffff; box-shadow: 0 0 12px #fff; }
+    .dot.p2 { background: #ff90b5; box-shadow: 0 0 16px #ff3b6f; }
+
+    .btn {
+      background: rgba(255, 220, 235, 0.25);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      padding: 8px 18px;
+      border-radius: 40px;
+      font-weight: 1000;
+      color: white;
+      cursor: pointer;
+      transition: 0.25s;
+      font-size: 0.9rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    .btn:hover {
+      background: rgba(255, 120, 160, 0.45);
+      transform: translateY(-3px);
+      border-color: white;
+    }
+
+    /* banner bawah */
+    .hudBottom {
+      position: absolute;
       left: 50%;
-      transform:translateX(-50%);
-      bottom: calc(env(safe-area-inset-bottom) + 14px);
-      z-index:20;
-      width:min(720px, 92vw);
-      pointer-events:none;
-    }
-    .banner{
-      pointer-events:auto;
-      padding:12px 14px;
-      border-radius:18px;
-      background: rgba(0,0,0,.42);
-      border:1px solid rgba(255,255,255,.14);
-      backdrop-filter: blur(10px);
-      text-align:center;
-      font-weight:800;
-      color: var(--txt);
-    }
-    .banner small{ display:block; margin-top:6px; color:var(--muted); font-weight:700; }
-
-    /* Overlay Start */
-    .overlay{
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      z-index:30;
-      background: radial-gradient(circle at center, rgba(255,0,90,.20), rgba(0,0,0,.72));
-      backdrop-filter: blur(6px);
-    }
-    .card{
-      width:min(520px, 92vw);
-      background: rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.16);
-      border-radius:24px;
-      padding:18px;
-      box-shadow: var(--shadow);
-      text-align:center;
-    }
-    .title{
-      font-size:26px;
-      font-weight:1000;
-      margin:6px 0 8px;
-      letter-spacing:.2px;
-    }
-    .sub{
-      color: var(--muted);
-      font-weight:700;
-      line-height:1.35;
-      margin:0 0 14px;
-    }
-    .row{
-      display:flex;
-      gap:10px;
-      justify-content:center;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-    .input{
-      width:140px;
-      padding:11px 12px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.20);
-      background: rgba(0,0,0,.28);
-      color: var(--txt);
-      outline:none;
-      font-weight:800;
-    }
-    .input:focus{ border-color: rgba(255,77,136,.75); box-shadow:0 0 0 4px rgba(255,77,136,.18); }
-
-    .bigBtn{
-      padding:12px 16px;
-      border-radius:18px;
-      border:none;
-      background: linear-gradient(135deg, #ff4d88, #ff1f5a);
-      color:#fff;
-      font-weight:1000;
-      cursor:pointer;
-      transition:.2s;
-      box-shadow: 0 14px 40px rgba(255,0,90,.22);
-    }
-    .bigBtn:hover{ transform: translateY(-1px); }
-
-    /* Landscape gate */
-    .landscapeGate{
-      position:absolute;
-      inset:0;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-      z-index:40;
-      background: rgba(0,0,0,.78);
-      text-align:center;
-    }
-    .landscapeGate.show{ display:flex; }
-    .landscapeGate .card{ background: rgba(255,255,255,.10); }
-    .rotateIcon{
-      font-size:44px;
-      margin-bottom:10px;
+      transform: translateX(-50%);
+      bottom: max(env(safe-area-inset-bottom, 16px), 16px);
+      width: min(92%, 650px);
+      z-index: 10;
+      pointer-events: none;
     }
 
-    /* Toast */
-    .toast{
-      position:absolute;
-      left:50%;
-      transform:translateX(-50%);
-      bottom: calc(env(safe-area-inset-bottom) + 80px);
-      background: rgba(255,255,255,.14);
-      border:1px solid rgba(255,255,255,.18);
-      padding:10px 14px;
-      border-radius:16px;
-      backdrop-filter: blur(10px);
-      font-weight:1000;
-      z-index:50;
-      display:none;
+    .banner {
+      background: rgba(20, 0, 10, 0.4);
+      backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 140, 180, 0.5);
+      border-radius: 40px;
+      padding: 14px 24px;
+      color: white;
+      font-weight: 700;
+      text-align: center;
+      font-size: 1rem;
+      box-shadow: 0 20px 30px -5px var(--love);
+      pointer-events: auto;
+      border: 1px solid rgba(255, 255, 255, 0.25);
     }
-    .toast.show{ display:block; }
 
-    @media(max-width:520px){
-      .title{ font-size:22px; }
-      .chip{ padding:9px 11px; font-size:13px; }
+    .banner small {
+      display: block;
+      margin-top: 6px;
+      opacity: 0.9;
+      font-weight: 600;
+      color: #ffe2ec;
+    }
+
+    /* overlay start (romantic) */
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 40%, rgba(255, 100, 150, 0.4), rgba(10, 0, 5, 0.9));
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 20;
+    }
+
+    .card {
+      max-width: 460px;
+      width: 100%;
+      background: rgba(255, 240, 245, 0.2);
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(255, 200, 220, 0.5);
+      border-radius: 40px;
+      padding: 28px 20px;
+      box-shadow: 0 40px 70px rgba(255, 20, 80, 0.5);
+      text-align: center;
+      color: white;
+    }
+
+    .card .title {
+      font-size: 2.1rem;
+      font-weight: 1000;
+      margin: 8px 0 10px;
+      background: linear-gradient(135deg, #ffe7f0, #ffffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 2px 10px #ff99bb;
+    }
+
+    .sub {
+      font-weight: 600;
+      margin: 16px 0 20px;
+      color: #ffeef4;
+      line-height: 1.5;
+      font-size: 1.05rem;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .input {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1.5px solid rgba(255, 255, 255, 0.5);
+      border-radius: 30px;
+      padding: 12px 20px;
+      width: 120px;
+      color: white;
+      font-weight: 800;
+      font-size: 1.2rem;
+      text-align: center;
+      outline: none;
+    }
+
+    .input:focus {
+      border-color: #ff90b5;
+      box-shadow: 0 0 0 4px rgba(255, 120, 160, 0.5);
+    }
+
+    .bigBtn {
+      background: linear-gradient(145deg, #ff5f8f, #ff2b5c);
+      border: none;
+      padding: 14px 34px;
+      border-radius: 60px;
+      font-weight: 1000;
+      font-size: 1.3rem;
+      color: white;
+      box-shadow: 0 15px 30px #ff3366;
+      cursor: pointer;
+      transition: 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .bigBtn:hover {
+      transform: scale(1.05);
+      background: linear-gradient(145deg, #ff799f, #ff4d7a);
+    }
+
+    /* landscape gate */
+    .landscapeGate {
+      position: absolute;
+      inset: 0;
+      background: rgba(30, 0, 10, 0.8);
+      backdrop-filter: blur(14px);
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      visibility: hidden;
+      opacity: 0;
+      transition: 0.3s;
+    }
+
+    .landscapeGate.show {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .rotateIcon {
+      font-size: 60px;
+      filter: drop-shadow(0 0 10px #ffa0c0);
+    }
+
+    .toast {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 130px;
+      background: rgba(255, 30, 80, 0.9);
+      backdrop-filter: blur(16px);
+      padding: 14px 28px;
+      border-radius: 60px;
+      color: white;
+      font-weight: 1000;
+      font-size: 1.2rem;
+      border: 1px solid white;
+      box-shadow: 0 10px 30px rgba(255,0,70,0.7);
+      z-index: 50;
+      display: none;
+      white-space: nowrap;
+    }
+
+    .toast.show { display: block; }
+
+    /* minor touch */
+    #hint {
+      background: rgba(255, 230, 240, 0.2);
+      border-radius: 60px;
+      padding: 12px;
     }
   </style>
 </head>
-
 <body>
   <div id="stage">
     <video id="video" playsinline></video>
     <canvas id="c"></canvas>
 
-    <!-- HUD -->
+    <!-- HUD atas super gemay -->
     <div class="hudTop">
       <div class="hudGroup">
-        <span class="chip">🎮 Game Cinta</span>
-        <span class="chip"><span class="dot p1"></span> P1: <span id="s1">0</span></span>
-        <span class="chip"><span class="dot p2"></span> P2: <span id="s2">0</span></span>
+        <span class="chip">🎮✨ Love catcher</span>
+        <span class="chip"><span class="dot p1"></span> P1 <span id="s1">0</span></span>
+        <span class="chip"><span class="dot p2"></span> P2 <span id="s2">0</span></span>
         <span class="chip">🎯 <span id="tLabel">10</span></span>
       </div>
       <div class="hudGroup">
-        <button id="reset" class="btn">Reset</button>
-        <button id="exit" class="btn">Keluar</button>
+        <button id="reset" class="btn">⟲ Reset</button>
+        <button id="exit" class="btn">🚪 Keluar</button>
       </div>
     </div>
 
     <div class="hudBottom">
       <div class="banner" id="banner">
-        Klik <b>Start</b> → izinkan kamera → berdiri berdua (kiri & kanan) → tangkap bola sesuai warna ✋
-        <small>Kalau salah nangkap, skor kamu berkurang 😅</small>
+        💗 <strong>tangkap bola sesuai warna tanganmu</strong> — kiri (putih) punya P1, kanan (pink) punya P2
+        <small>⚠️ salah tangkap? skor berkurang 😱  tapi santuy, ini cinta 💋</small>
       </div>
     </div>
 
-    <!-- Start overlay -->
+    <!-- overlay start -->
     <div id="overlay" class="overlay">
       <div class="card">
-        <div class="title">Siap main bareng? 💗</div>
+        <div class="title">🌸 main yuk! 🌸</div>
         <p class="sub">
-          Game akan mulai otomatis setelah <b>2 wajah</b> terdeteksi (kiri = P1, kanan = P2).<br/>
-          Tangkap bola pakai <b>tangan</b>.
+          tunggu sampai <b>2 wajah terdeteksi</b> (kiri/p1, kanan/p2) <br>
+          lalu tangkap bola pakai ujung jari telunjuk ✨
         </p>
         <div class="row">
-          <label style="font-weight:900;">Target</label>
-          <input id="target" class="input" type="number" min="3" max="200" value="10"/>
-          <button id="start" class="bigBtn">Start</button>
+          <label style="font-weight:900;">🏆 target poin</label>
+          <input id="target" class="input" type="number" min="3" max="200" value="10">
+          <button id="start" class="bigBtn">mulai ❤️</button>
         </div>
         <p class="sub" id="hint" style="margin-top:12px;">
-          Tips: terbaik dimainkan <b>landscape</b> + cahaya terang ✨
+          🌈 pastikan cahaya cukup & posisi landscape biar makin seru
         </p>
       </div>
     </div>
 
-    <!-- Landscape gate -->
+    <!-- landscape reminder -->
     <div id="landGate" class="landscapeGate">
-      <div class="card">
-        <div class="rotateIcon">📱↪️</div>
-        <div class="title">Putar HP ke Landscape</div>
-        <p class="sub">Biar kamera full layar & mainnya enak. Setelah landscape, game lanjut otomatis.</p>
-        <button id="continueAnyway" class="bigBtn">Lanjut (tetap portrait)</button>
+      <div class="card" style="max-width:380px;">
+        <div class="rotateIcon">📱↪️💞</div>
+        <div class="title">rotasi ya say</div>
+        <p class="sub">mainnya lebih mantap kalo landscape, biar tangan leluasa</p>
+        <button id="continueAnyway" class="bigBtn" style="font-size:1.1rem;">lanjut aja (portrait)</button>
       </div>
     </div>
 
-    <div id="toast" class="toast">Kamu salah nangkap 😅</div>
+    <!-- toast notif -->
+    <div id="toast" class="toast">💔 salah tangkap!</div>
   </div>
 
-  <!-- MediaPipe -->
+  <!-- mediapipe libs -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/face_detection.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
 
   <script>
-    const $ = (id)=>document.getElementById(id);
-    const video = $("video");
-    const canvas = $("c");
-    const ctx = canvas.getContext("2d");
+    (function() {
+      const $ = id => document.getElementById(id);
+      const video = $('video');
+      const canvas = $('c');
+      const ctx = canvas.getContext('2d');
 
-    const overlay = $("overlay");
-    const landGate = $("landGate");
-    const toastEl = $("toast");
+      // elemen UI
+      const overlay = $('overlay');
+      const landGate = $('landGate');
+      const toastEl = $('toast');
+      const s1El = $('s1'), s2El = $('s2'), tLabel = $('tLabel');
+      const targetInput = $('target');
+      const hint = $('hint');
 
-    const s1El = $("s1"), s2El = $("s2"), tLabel = $("tLabel");
-    const targetInput = $("target");
-    const hint = $("hint");
+      // helper functions
+      const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
+      const dist = (x1,y1,x2,y2) => Math.hypot(x1-x2, y1-y2);
+      const showToast = (msg) => {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        setTimeout(() => toastEl.classList.remove('show'), 900);
+      };
 
-    function clamp(v,a,b){ return Math.max(a, Math.min(b,v)); }
-    function dist(ax,ay,bx,by){ const dx=ax-bx, dy=ay-by; return Math.sqrt(dx*dx+dy*dy); }
+      // resize canvas sesuai layar
+      const resizeCanvas = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      };
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
 
-    function showToast(msg){
-      toastEl.textContent = msg;
-      toastEl.classList.add("show");
-      setTimeout(()=>toastEl.classList.remove("show"), 900);
-    }
+      // landscape detector
+      const isLandscape = () => window.innerWidth > window.innerHeight;
 
-    // Fullscreen request (user gesture needed)
-    async function goFullscreen(){
-      const el = document.documentElement;
-      if (document.fullscreenElement) return;
-      try{
-        await el.requestFullscreen?.();
-      }catch(e){
-        // ignore (some browsers block)
-      }
-    }
+      // state game
+      let running = false;
+      let score1 = 0, score2 = 0;
+      let target = 10;
 
-    function resize(){
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    window.addEventListener("resize", resize);
-    resize();
+      // detected objects
+      const faceL = { x:0, y:0, seen: false };
+      const faceR = { x:0, y:0, seen: false };
+      const hand1 = { x:0, y:0, seen: false }; // putih
+      const hand2 = { x:0, y:0, seen: false }; // pink
 
-    // Landscape detection (recommended, not forced)
-    function isLandscape(){
-      return window.innerWidth > window.innerHeight;
-    }
+      // bola
+      let balls = [];
+      const BALL_COUNT = 10;
 
-    // ========= GAME STATE =========
-    let running=false;
-    let score1=0, score2=0;
-    let target=10;
-
-    const faceL = {x:0,y:0,seen:false};
-    const faceR = {x:0,y:0,seen:false};
-
-    const h1 = {x:0,y:0,seen:false};
-    const h2 = {x:0,y:0,seen:false};
-
-    const balls=[];
-    const BALL_N = 10;
-
-    function spawnBall(owner){
-      const r = 16 + Math.random()*10;
-      const x = r + Math.random()*(canvas.width - r*2);
-      const y = r + 60 + Math.random()*(canvas.height - r*2 - 120);
-      const vx = (Math.random()*2-1)*(2.6 + Math.random()*1.6);
-      const vy = (Math.random()*2-1)*(2.6 + Math.random()*1.6);
-      return {owner, x, y, vx, vy, r};
-    }
-
-    function seedBalls(){
-      balls.length=0;
-      for(let i=0;i<BALL_N;i++){
-        balls.push(spawnBall(i%2===0?1:2));
-      }
-    }
-
-    function resetGame(){
-      running=false;
-      score1=0; score2=0;
-      s1El.textContent="0"; s2El.textContent="0";
-      seedBalls();
-      overlay.style.display="flex";
-      hint.textContent = "Tips: terbaik dimainkan landscape + cahaya terang ✨";
-    }
-
-    function beginRunning(){
-      running=true;
-      overlay.style.display="none";
-    }
-
-    // ========= MediaPipe =========
-    const fd = new FaceDetection({
-      locateFile: (f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${f}`
-    });
-    fd.setOptions({ model:"short", minDetectionConfidence:0.6 });
-
-    fd.onResults((res)=>{
-      faceL.seen=false; faceR.seen=false;
-      const dets = (res.detections||[]).slice(0,2);
-      if (!dets.length) return;
-
-      const centers = dets.map(d=>{
-        const bb = d.boundingBox;
-        return { x: (bb.xMin + bb.width/2) * canvas.width,
-                 y: (bb.yMin + bb.height/2) * canvas.height };
-      }).sort((a,b)=>a.x-b.x);
-
-      if (centers[0]){ faceL.x=centers[0].x; faceL.y=centers[0].y; faceL.seen=true; }
-      if (centers[1]){ faceR.x=centers[1].x; faceR.y=centers[1].y; faceR.seen=true; }
-
-      // auto start if 2 faces detected
-      if (!running && faceL.seen && faceR.seen){
-        beginRunning();
-      }
-    });
-
-    const hands = new Hands({
-      locateFile: (f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
-    });
-    hands.setOptions({
-      maxNumHands: 2,
-      modelComplexity: 0,
-      minDetectionConfidence: 0.6,
-      minTrackingConfidence: 0.6
-    });
-
-    hands.onResults((res)=>{
-      h1.seen=false; h2.seen=false;
-      const ls = res.multiHandLandmarks || [];
-      const pts = ls.slice(0,2).map(lm=>{
-        const p = lm[8]; // index fingertip
-        return { x: p.x*canvas.width, y: p.y*canvas.height };
-      });
-
-      if (pts[0]){ h1.x=pts[0].x; h1.y=pts[0].y; h1.seen=true; }
-      if (pts[1]){ h2.x=pts[1].x; h2.y=pts[1].y; h2.seen=true; }
-    });
-
-    // Camera
-    let cam=null;
-    async function startCamera(){
-      cam = new Camera(video, {
-        onFrame: async ()=>{
-          await fd.send({image: video});
-          await hands.send({image: video});
-        },
-        width: 1280,
-        height: 720
-      });
-      await cam.start();
-    }
-
-    // Catch logic: who determined by hand side (kiri/kanan layar)
-    function whoFromHand(handX){
-      return (handX < canvas.width/2) ? 1 : 2;
-    }
-
-    function penalize(who){
-      if (who===1){
-        score1 = Math.max(0, score1-1);
-        s1El.textContent = score1;
-        showToast("❌ P1 salah nangkap!");
-      }else{
-        score2 = Math.max(0, score2-1);
-        s2El.textContent = score2;
-        showToast("❌ P2 salah nangkap!");
-      }
-      alert("Kamu salah nangkap 😅");
-    }
-
-    function reward(who){
-      if (who===1){ score1++; s1El.textContent = score1; }
-      else { score2++; s2El.textContent = score2; }
-    }
-
-    function tryCatch(ball, hand, who){
-      if (!hand.seen) return false;
-      const catchR = ball.r + 30;
-      if (dist(ball.x, ball.y, hand.x, hand.y) < catchR){
-        if (ball.owner === who) reward(who);
-        else penalize(who);
-        Object.assign(ball, spawnBall(ball.owner));
-        return true;
-      }
-      return false;
-    }
-
-    // Render loop (mirrored selfie feel)
-    function draw(){
-      ctx.clearRect(0,0,canvas.width,canvas.height);
-
-      ctx.save();
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-
-      // background tint
-      ctx.fillStyle="rgba(255,0,90,.10)";
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-
-      // mid line
-      ctx.globalAlpha=.22;
-      ctx.strokeStyle="#ff4d88";
-      ctx.setLineDash([12,12]);
-      ctx.beginPath();
-      ctx.moveTo(canvas.width/2, 16);
-      ctx.lineTo(canvas.width/2, canvas.height-16);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.globalAlpha=1;
-
-      // face rings
-      const fr=44;
-      if (faceL.seen){
-        ctx.lineWidth=6; ctx.strokeStyle="#fff";
-        ctx.beginPath(); ctx.arc(faceL.x, faceL.y, fr, 0, Math.PI*2); ctx.stroke();
-      }
-      if (faceR.seen){
-        ctx.lineWidth=6; ctx.strokeStyle="#ff2b67";
-        ctx.beginPath(); ctx.arc(faceR.x, faceR.y, fr, 0, Math.PI*2); ctx.stroke();
+      function spawnBall(owner) { // owner 1 atau 2
+        const r = 20 + Math.random() * 16;
+        const x = r + Math.random() * (canvas.width - 2*r);
+        const y = r + 80 + Math.random() * (canvas.height - 2*r - 120);
+        const vx = (Math.random() * 2 - 1) * (2.2 + Math.random() * 2.5);
+        const vy = (Math.random() * 2 - 1) * (2.2 + Math.random() * 2.5);
+        return { owner, x, y, vx, vy, r };
       }
 
-      // hand markers
-      function drawHand(h, color){
-        if (!h.seen) return;
-        ctx.fillStyle=color;
-        ctx.beginPath(); ctx.arc(h.x,h.y,12,0,Math.PI*2); ctx.fill();
-        ctx.globalAlpha=.18;
-        ctx.beginPath(); ctx.arc(h.x,h.y,30,0,Math.PI*2); ctx.fill();
-        ctx.globalAlpha=1;
-      }
-      drawHand(h1, "#fff");
-      drawHand(h2, "#ff2b67");
-
-      // balls movement
-      if (running){
-        for (const b of balls){
-          b.x += b.vx; b.y += b.vy;
-          if (b.x < b.r || b.x > canvas.width-b.r) b.vx *= -1;
-          if (b.y < b.r || b.y > canvas.height-b.r) b.vy *= -1;
-
-          // catches
-          if (h1.seen){
-            const who = whoFromHand(h1.x);
-            tryCatch(b, h1, who);
-          }
-          if (h2.seen){
-            const who = whoFromHand(h2.x);
-            tryCatch(b, h2, who);
-          }
-        }
-
-        // win check
-        if (score1 >= target || score2 >= target){
-          running=false;
-          overlay.style.display="flex";
-          hint.textContent = (score1>=target) ? "🎉 Player 1 menang! Klik Reset untuk main lagi 💗" : "🎉 Player 2 menang! Klik Reset untuk main lagi 💗";
+      function seedBalls() {
+        balls = [];
+        for (let i = 0; i < BALL_COUNT; i++) {
+          balls.push(spawnBall(i % 2 === 0 ? 1 : 2));
         }
       }
 
-      // draw balls
-      for (const b of balls){
-        const fill = (b.owner===1) ? "#fff" : "#ff2b67";
-        const stroke = (b.owner===1) ? "#ff4d88" : "#fff";
-
-        ctx.globalAlpha=.18;
-        ctx.fillStyle=fill;
-        ctx.beginPath(); ctx.arc(b.x,b.y,b.r+12,0,Math.PI*2); ctx.fill();
-        ctx.globalAlpha=1;
-
-        ctx.fillStyle=fill;
-        ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
-
-        ctx.lineWidth=4;
-        ctx.strokeStyle=stroke;
-        ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.stroke();
-      }
-
-      ctx.restore();
-
-      requestAnimationFrame(draw);
-    }
-    requestAnimationFrame(draw);
-
-    // Landscape gate behavior
-    let allowPortrait = false;
-    function updateLandscapeGate(){
-      if (allowPortrait) { landGate.classList.remove("show"); return; }
-      if (!isLandscape()){
-        landGate.classList.add("show");
-      }else{
-        landGate.classList.remove("show");
-      }
-    }
-    window.addEventListener("resize", updateLandscapeGate);
-    $("continueAnyway").onclick = ()=>{ allowPortrait=true; landGate.classList.remove("show"); };
-
-    // UI actions
-    $("exit").onclick = ()=> location.href="book.html";
-    $("reset").onclick = ()=> resetGame();
-
-    $("start").onclick = async ()=>{
-      target = clamp(parseInt(targetInput.value||"10",10), 3, 200);
-      tLabel.textContent = target;
-
-      // go fullscreen on start gesture
-      await goFullscreen();
-
-      // show rotate overlay if portrait
-      allowPortrait = false;
-      updateLandscapeGate();
-
-      resetGame();
-      hint.textContent = "Mendeteksi 2 wajah… (kiri=P1, kanan=P2). Game mulai otomatis.";
-
-      try{
+      // reset game
+      function resetGame() {
+        running = false;
+        score1 = 0; score2 = 0;
+        s1El.textContent = '0';
+        s2El.textContent = '0';
         seedBalls();
-        await startCamera();
-      }catch(e){
-        console.error(e);
-        hint.textContent = "❌ Kamera gagal. Cek izin kamera (Allow) & pastikan HTTPS (Vercel aman).";
+        overlay.style.display = 'flex';
+        hint.innerHTML = '🌈 pastikan cahaya cukup & posisi landscape biar makin seru';
       }
-    };
 
-    // init
-    tLabel.textContent = targetInput.value;
-    seedBalls();
-    resetGame();
+      // mulai running (sembunyikan overlay)
+      function beginRunning() {
+        running = true;
+        overlay.style.display = 'none';
+      }
+
+      // mediapipe face detection
+      const faceDetect = new FaceDetection({
+        locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_detection/${f}`
+      });
+      faceDetect.setOptions({ model: 'short', minDetectionConfidence: 0.6 });
+      faceDetect.onResults(results => {
+        faceL.seen = false;
+        faceR.seen = false;
+        const dets = results.detections || [];
+        if (dets.length === 0) return;
+
+        const centers = dets.slice(0,2).map(d => {
+          const bb = d.boundingBox;
+          return {
+            x: (bb.xMin + bb.width/2) * canvas.width,
+            y: (bb.yMin + bb.height/2) * canvas.height
+          };
+        }).sort((a,b) => a.x - b.x);
+
+        if (centers[0]) { faceL.x = centers[0].x; faceL.y = centers[0].y; faceL.seen = true; }
+        if (centers[1]) { faceR.x = centers[1].x; faceR.y = centers[1].y; faceR.seen = true; }
+
+        // auto start kalau dua wajah terdeteksi
+        if (!running && faceL.seen && faceR.seen) {
+          beginRunning();
+        }
+      });
+
+      // hands detection
+      const hands = new Hands({
+        locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+      });
+      hands.setOptions({
+        maxNumHands: 2,
+        modelComplexity: 0,
+        minDetectionConfidence: 0.6,
+        minTrackingConfidence: 0.6
+      });
+      hands.onResults(results => {
+        hand1.seen = false;
+        hand2.seen = false;
+        const landmarks = results.multiHandLandmarks || [];
+        if (landmarks.length === 0) return;
+
+        // ambil ujung jari telunjuk (index 8)
+        const pts = landmarks.slice(0,2).map(lm => ({
+          x: lm[8].x * canvas.width,
+          y: lm[8].y * canvas.height
+        }));
+
+        if (pts[0]) { hand1.x = pts[0].x; hand1.y = pts[0].y; hand1.seen = true; }
+        if (pts[1]) { hand2.x = pts[1].x; hand2.y = pts[1].y; hand2.seen = true; }
+      });
+
+      // kamera
+      let camera = null;
+      async function startCamera() {
+        camera = new Camera(video, {
+          onFrame: async () => {
+            await faceDetect.send({ image: video });
+            await hands.send({ image: video });
+          },
+          width: 1280,
+          height: 720
+        });
+        await camera.start();
+      }
+
+      // logika side berdasarkan posisi tangan (kiri layar = P1)
+      function whoFromHand(handX) {
+        return handX < canvas.width / 2 ? 1 : 2;
+      }
+
+      function penalize(who) {
+        if (who === 1) {
+          score1 = Math.max(0, score1 - 1);
+          s1El.textContent = score1;
+          showToast('❌ P1 salah tangkap!');
+        } else {
+          score2 = Math.max(0, score2 - 1);
+          s2El.textContent = score2;
+          showToast('❌ P2 salah tangkap!');
+        }
+      }
+
+      function reward(who) {
+        if (who === 1) { score1++; s1El.textContent = score1; }
+        else { score2++; s2El.textContent = score2; }
+      }
+
+      function tryCatch(ball, hand, who) {
+        if (!hand.seen) return false;
+        const catchDist = ball.r + 30;
+        if (dist(ball.x, ball.y, hand.x, hand.y) < catchDist) {
+          if (ball.owner === who) reward(who);
+          else penalize(who);
+          // ganti bola baru (owner tetap sesuai awal biar adil)
+          const newBall = spawnBall(ball.owner);
+          ball.x = newBall.x; ball.y = newBall.y;
+          ball.vx = newBall.vx; ball.vy = newBall.vy;
+          ball.r = newBall.r;
+          return true;
+        }
+        return false;
+      }
+
+      // render utama
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // karena video di belakang (z-index lebih rendah), kita hanya gambar overlay deteksi
+        // canvas transparan agar video terlihat
+
+        // gambar garis tengah
+        ctx.save();
+        ctx.strokeStyle = '#ffb0c3';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([12, 16]);
+        ctx.beginPath();
+        ctx.moveTo(canvas.width/2, 30);
+        ctx.lineTo(canvas.width/2, canvas.height-30);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // gambar lingkaran wajah (mirror effect)
+        if (faceL.seen) {
+          ctx.beginPath();
+          ctx.arc(faceL.x, faceL.y, 45, 0, 2*Math.PI);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 5;
+          ctx.stroke();
+          ctx.shadowColor = '#fff';
+          ctx.shadowBlur = 20;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+        if (faceR.seen) {
+          ctx.beginPath();
+          ctx.arc(faceR.x, faceR.y, 45, 0, 2*Math.PI);
+          ctx.strokeStyle = '#ff80a5';
+          ctx.lineWidth = 5;
+          ctx.stroke();
+          ctx.shadowColor = '#ff5982';
+          ctx.shadowBlur = 20;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+
+        // gambar tangan (glowing)
+        const drawHand = (h, color) => {
+          if (!h.seen) return;
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 30;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(h.x, h.y, 18, 0, 2*Math.PI);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.shadowColor = 'transparent';
+          ctx.globalAlpha = 0.3;
+          ctx.beginPath();
+          ctx.arc(h.x, h.y, 36, 0, 2*Math.PI);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.globalAlpha = 1.0;
+        };
+        drawHand(hand1, '#ffffff');
+        drawHand(hand2, '#ff9cbc');
+
+        // update & gambar bola
+        if (running) {
+          for (let b of balls) {
+            b.x += b.vx;
+            b.y += b.vy;
+            if (b.x < b.r) { b.x = b.r; b.vx *= -1; }
+            if (b.x > canvas.width - b.r) { b.x = canvas.width - b.r; b.vx *= -1; }
+            if (b.y < b.r) { b.y = b.r; b.vy *= -1; }
+            if (b.y > canvas.height - b.r) { b.y = canvas.height - b.r; b.vy *= -1; }
+
+            // tangkap dengan kedua tangan
+            if (hand1.seen) tryCatch(b, hand1, whoFromHand(hand1.x));
+            if (hand2.seen) tryCatch(b, hand2, whoFromHand(hand2.x));
+          }
+
+          // cek menang
+          if (score1 >= target || score2 >= target) {
+            running = false;
+            overlay.style.display = 'flex';
+            const winner = score1 >= target ? 'P1' : 'P2';
+            hint.innerHTML = `🎉 <b>${winner} MENANG!</b> klik reset buat main lagi 💕`;
+          }
+        }
+
+        // gambar bola2
+        for (let b of balls) {
+          const grad = ctx.createRadialGradient(b.x-5, b.y-5, 5, b.x, b.y, b.r+10);
+          if (b.owner === 1) {
+            grad.addColorStop(0, '#fff0f5');
+            grad.addColorStop(1, '#ffc0cb');
+          } else {
+            grad.addColorStop(0, '#ffb3c6');
+            grad.addColorStop(1, '#ff5f8f');
+          }
+          ctx.shadowColor = b.owner === 1 ? '#ffe2ec' : '#ff2b67';
+          ctx.shadowBlur = 30;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, 2*Math.PI);
+          ctx.fillStyle = grad;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          // stroke border
+          ctx.strokeStyle = b.owner === 1 ? '#ffffff' : '#ffd0df';
+          ctx.lineWidth = 4;
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        requestAnimationFrame(draw);
+      }
+      draw();
+
+      // landscape gate logic
+      let allowPortrait = false;
+      function updateGate() {
+        if (allowPortrait) { landGate.classList.remove('show'); return; }
+        if (!isLandscape()) landGate.classList.add('show');
+        else landGate.classList.remove('show');
+      }
+      window.addEventListener('resize', updateGate);
+      $('continueAnyway').onclick = () => { allowPortrait = true; landGate.classList.remove('show'); };
+
+      // UI events
+      $('exit').onclick = () => location.href = 'about:blank';  // biar aman ganti dummy
+      $('reset').onclick = () => resetGame();
+
+      $('start').onclick = async () => {
+        target = clamp(parseInt(targetInput.value, 10) || 10, 3, 200);
+        tLabel.textContent = target;
+
+        // fullscreen jika bisa
+        try { await document.documentElement.requestFullscreen(); } catch(e) {}
+
+        allowPortrait = false;
+        updateGate();
+
+        resetGame();  // overlay muncul lagi, tapi nanti hilang sendiri saat 2 face
+        hint.innerHTML = '👀 mendeteksi 2 wajah... (kiri P1, kanan P2)';
+
+        try {
+          seedBalls();
+          await startCamera();
+        } catch (e) {
+          hint.innerHTML = '❌ kamera error. izinkan kamera dan pakai https (vercel aman)';
+        }
+      };
+
+      // initial
+      tLabel.textContent = targetInput.value;
+      seedBalls();
+      resetGame();
+
+    })();
   </script>
 </body>
 </html>
