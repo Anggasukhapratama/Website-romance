@@ -1,10 +1,21 @@
-// app.js
-const STORE_KEY = "KK_MEMORIES_V2";
+// app.js (Quick Fix: shared password for all devices, no database)
+// --------------------------------------------------------------
+// Password tidak disimpan di localStorage, jadi semua device akan sama.
+// Catatan: ini bukan security serius (password bisa terlihat di source).
 
+const STORE_KEY = "KK_MEMORIES_V3";
+
+// ✅ GANTI PASSWORD DI SINI (sama untuk semua device)
+const SHARED_PASSWORD = "sayangkamu2026";
+
+// (opsional) kalau mau "hint" buat kamu sendiri, tidak dipakai sistem
+const PASSWORD_HINT = "kata sayang + tahun";
+
+// =====================
+// DATA DEFAULT (slides, reveal code, dll)
+// =====================
 function defaultData() {
   return {
-    passwordHash: "",        // sha256
-    passwordPlain: "sayang", // plaintext (biar bisa ditampilkan di admin) - ini kurang aman, tapi OK untuk surprise
     revealCode: "KITA-SELAMANYA",
     lastIndex: 0,
     slides: [
@@ -25,64 +36,48 @@ function saveData(data) {
 }
 
 /**
- * FIX utama:
- * - Seed disimpan langsung (tidak nunggu sha256 async)
- * - Hash dibuat setelahnya (async) tanpa bikin data null
+ * Seed data (slides/revealCode/lastIndex) ke localStorage.
+ * Password tidak ikut disimpan agar sama di semua device.
  */
 function ensureSeed() {
   let data = loadData();
-
   if (!data) {
     data = defaultData();
     saveData(data);
-
-    // isi hash async
-    sha256(data.passwordPlain).then((h) => {
-      const latest = loadData();
-      if (!latest) return;
-      latest.passwordHash = h;
-      saveData(latest);
-    });
-
     return;
   }
 
-  // kalau data ada tapi hash kosong, perbaiki
-  if (!data.passwordHash && data.passwordPlain) {
-    sha256(data.passwordPlain).then((h) => {
-      const latest = loadData();
-      if (!latest) return;
-      latest.passwordHash = h;
-      saveData(latest);
-    });
-  }
+  // migrasi ringan: kalau masih ada field lama, biarin aja, tapi pastiin field baru ada
+  if (!("slides" in data)) data.slides = defaultData().slides;
+  if (!("revealCode" in data)) data.revealCode = defaultData().revealCode;
+  if (!("lastIndex" in data)) data.lastIndex = 0;
+
+  saveData(data);
 }
 
+// =====================
+// AUTH
+// =====================
 function guardAuthOrGoHome() {
   if (sessionStorage.getItem("KK_AUTH") === "1") return;
   window.location.href = "index.html";
 }
 
 async function verifyPassword(pw) {
-  ensureSeed();
-  const data = loadData();
-  if (!data) return false;
-
-  // fallback kalau hash belum kebentuk
-  if (!data.passwordHash && data.passwordPlain) {
-    return pw === data.passwordPlain;
-  }
-
-  const hash = await sha256(pw);
-  return hash === data.passwordHash;
+  // simple compare (shared password)
+  return String(pw || "").trim() === SHARED_PASSWORD;
 }
 
+// =====================
+// UTIL
+// =====================
 function makeCuteCode() {
   const list = ["KITA-SELAMANYA", "I💗U", "ONLY-US", "FOREVER-US", "JADIAN-♡"];
   return list[Math.floor(Math.random() * list.length)];
 }
 
 async function sha256(message) {
+  // masih dipakai kalau kamu butuh untuk hal lain
   const msgUint8 = new TextEncoder().encode(message);
   const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -123,38 +118,38 @@ function toast(msg) {
   setTimeout(() => t.remove(), 1400);
 }
 
-function escapeHtml(s){
+function escapeHtml(s) {
   return (s ?? "").replace(/[&<>"']/g, (m) => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
   }[m]));
 }
 
 function popConfetti() {
   const n = 40;
-  for (let i=0;i<n;i++){
+  for (let i = 0; i < n; i++) {
     const p = document.createElement("div");
     p.style.position = "fixed";
-    p.style.left = (Math.random()*100) + "vw";
+    p.style.left = (Math.random() * 100) + "vw";
     p.style.top = "-10px";
     p.style.width = "8px";
     p.style.height = "12px";
     p.style.borderRadius = "3px";
-    p.style.background = `hsl(${Math.random()*360}, 90%, 70%)`;
+    p.style.background = `hsl(${Math.random() * 360}, 90%, 70%)`;
     p.style.opacity = "0.95";
     p.style.zIndex = "9999";
-    p.style.transform = `rotate(${Math.random()*80}deg)`;
+    p.style.transform = `rotate(${Math.random() * 80}deg)`;
     document.body.appendChild(p);
 
-    const dur = 900 + Math.random()*900;
-    const drift = (Math.random()*2-1) * 120;
-    const endY = 80 + Math.random()*20;
+    const dur = 900 + Math.random() * 900;
+    const drift = (Math.random() * 2 - 1) * 120;
+    const endY = 80 + Math.random() * 20;
 
     const start = performance.now();
-    (function anim(now){
-      const t = Math.min(1, (now-start)/dur);
-      p.style.top = (t*endY) + "vh";
-      p.style.left = `calc(${p.style.left} + ${drift*t}px)`;
-      p.style.transform = `rotate(${t*360}deg)`;
+    (function anim(now) {
+      const t = Math.min(1, (now - start) / dur);
+      p.style.top = (t * endY) + "vh";
+      p.style.left = `calc(${p.style.left} + ${drift * t}px)`;
+      p.style.transform = `rotate(${t * 360}deg)`;
       p.style.opacity = String(1 - t);
       if (t < 1) requestAnimationFrame(anim);
       else p.remove();
@@ -166,10 +161,10 @@ function popConfetti() {
 // GLOBAL BACKGROUND MUSIC ENGINE
 // ==============================
 function initGlobalMusic() {
-  if (window.top.__GLOBAL_BGM__) return; // sudah ada, jangan buat lagi
+  if (window.top.__GLOBAL_BGM__) return; // sudah ada
 
   const audio = document.createElement("audio");
-  audio.src = "music.mp3";   // pastikan file ini ada
+  audio.src = "music.mp3";   // taruh music.mp3 di folder yang sama
   audio.loop = true;
   audio.preload = "auto";
   audio.volume = 0;
@@ -187,7 +182,9 @@ async function playGlobalMusic() {
     await audio.play();
     fadeInMusic(audio);
   } catch {
+    // autoplay diblok, nanti user tap
     console.log("Autoplay diblok, tunggu interaksi user.");
+    throw new Error("Autoplay blocked");
   }
 }
 
